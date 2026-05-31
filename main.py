@@ -1,28 +1,31 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from database import conectar_banco
 
 app = FastAPI(title="SIGAgro API", description="API para Gerenciamento Agrícola e Micro-irrigação")
+
+# Configuração do CORS para permitir que o Vue converse com a API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # Libera qualquer front-end para testarmos
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def home():
     return {"status": "API SIGAgro rodando com sucesso!"}
 
-# O erro 404 acontece quando esta linha abaixo (o decorator) está faltando ou com erro de digitação!
 @app.get("/banco-status")
 def checar_banco():
     try:
-        # 1. Abre a conexão com o banco
         conexao = conectar_banco()
         cursor = conexao.cursor()
-        
-        # 2. Executa um comando SQL real
         cursor.execute("SHOW TABLES;")
         tabelas = cursor.fetchall()
-        
-        # 3. Fecha a porta do cofre (muito importante!)
         conexao.close()
         
-        # 4. Devolve o resultado
         return {
             "mensagem": "Conexão perfeita! O garçom encontrou o cofre.", 
             "tabelas_encontradas": tabelas
